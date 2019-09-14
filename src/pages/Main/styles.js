@@ -4,14 +4,6 @@ export const Form = styled.form`
   margin-top: 30px;
   display: flex;
   flex-direction: row;
-
-  input {
-    flex: 1;
-    border: 1px solid #eee;
-    padding: 10px 15px;
-    border-radius: 4px;
-    font-size: 16px;
-  }
 `;
 
 const rotate = keyframes`
@@ -50,6 +42,11 @@ export const SubmitButton = styled.button.attrs(props => ({
     `}
 `;
 
+export const SpanError = styled.span`
+  font-size: 12px !important;
+  color: #ff0000;
+`;
+
 export const List = styled.ul`
   list-style: none;
   margin-top: 30px;
@@ -70,4 +67,13 @@ export const List = styled.ul`
       text-decoration: none;
     }
   }
+`;
+
+export const InputRepository = styled.input`
+  flex: 1;
+  border: 1px solid;
+  padding: 10px 15px;
+  border-radius: 4px;
+  font-size: 16px;
+  border-color: ${props => (props.error ? '#ff0000 !important' : 'initial')};
 `;

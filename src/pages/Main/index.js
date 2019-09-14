@@ -3,7 +3,7 @@ import { FaGithubAlt, FaPlus, FaSpinner } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 import api from '../../services/api';
-import { Form, SubmitButton, List } from './styles';
+import { Form, SubmitButton, List, SpanError, InputRepository } from './styles';
 import Container from '../../components/Container/index';
 
 class Main extends Component {
@@ -11,6 +11,7 @@ class Main extends Component {
     newRepo: '',
     repositories: [],
     loading: false,
+    errorSubmit: '',
   };
 
   // Carrega dados do localStorage
@@ -34,26 +35,50 @@ class Main extends Component {
     this.setState({ newRepo: e.target.value });
   };
 
+  renderError = msg => {
+    this.setState({ errorSubmit: msg });
+  };
+
   handleSubmit = async e => {
-    e.preventDefault();
-    this.setState({ loading: true });
+    try {
+      e.preventDefault();
+      this.setState({ loading: true });
 
-    const { newRepo, repositories } = this.state;
-    const response = await api.get(`/repos/${newRepo}`);
+      const { newRepo, repositories } = this.state;
+      const response = await api.get(`/repos/${newRepo}`);
 
-    const data = {
-      name: response.data.full_name,
-    };
+      const data = {
+        name: response.data.full_name,
+      };
 
-    this.setState({
-      repositories: [...repositories, data],
-      newRepo: '',
-      loading: false,
-    });
+      if (data) {
+        repositories.forEach(e => {
+          if (e.name === data.name) {
+            throw new Error('Repositório duplicado');
+          }
+        });
+      }
+
+      this.setState({
+        repositories: [...repositories, data],
+        newRepo: '',
+        loading: false,
+      });
+    } catch (e) {
+      if (e.message === 'Repositório duplicado') {
+        this.setState({ loading: false });
+        return this.renderError(e.message);
+      }
+      if (e.response.status === parseInt('404')) {
+        console.log(e.message)
+        this.renderError('Repositório não encontrado');
+        this.setState({ loading: false });
+      }
+    }
   };
 
   render() {
-    const { newRepo, loading, repositories } = this.state;
+    const { newRepo, loading, repositories, errorSubmit } = this.state;
 
     return (
       <Container>
@@ -62,11 +87,12 @@ class Main extends Component {
           Repositórios
         </h1>
         <Form onSubmit={this.handleSubmit}>
-          <input
+          <InputRepository
             type="text"
             placeholder="Adicionar repositório"
             value={newRepo}
             onChange={this.HandleInputChange}
+            error={errorSubmit}
           />
           <SubmitButton loading={loading}>
             {loading ? (
@@ -76,6 +102,7 @@ class Main extends Component {
             )}
           </SubmitButton>
         </Form>
+        <SpanError className="error-message">{errorSubmit}</SpanError>
 
         <List>
           {repositories.map(repository => (
